@@ -7,15 +7,14 @@ import java.io.File;
 
 public class Ventana extends JFrame {
 
-    private DefaultListModel modeloLista;
-    private JList listaZapatos;
-    private JTextField NZapato;
-    private JRadioButton rbHombre;
-    private JRadioButton rbMujer;
+      private DefaultListModel<String> modeloLista;
+       private JList<String> listaZapatos;
+       private JTextField NZapato;
+       private JRadioButton rbHombre;
+       private JRadioButton rbMujer;
 
-    // ── Cambia esta ruta por la carpeta raíz de tu proyecto ──
-    private static final String RUTA_BASE = "C:\\Users\\joser\\OneDrive\\Escritorio\\Proyecto1";
-
+       private static final String RUTA_BASE = "C:\\Users\\Ebe\\Downloads\\Proyecto1";
+       
     // Así quedan las carpetas de imágenes por marca y género:
     // Proyecto1\Nike\hombre\01.png  02.png  03.png ...
     // Proyecto1\Nike\mujer\01.png   02.png  03.png ...
@@ -24,34 +23,54 @@ public class Ventana extends JFrame {
     // Proyecto1\Puma\hombre\01.png ...
     // Proyecto1\Puma\mujer\01.png ...
 
+       private static final double[] preciosNike   = {1200, 1350, 1500, 1600, 1750, 1800};
+       private static final double[] preciosAdidas = {1100, 1250, 1400, 1550, 1700, 1850};
+       private static final double[] preciosPuma   = {1000, 1150, 1300, 1450, 1600, 1750};
+
     public Ventana() {
         super("Tienda de Zapatos");
-        setSize(500, 400);
+        setSize(600, 500);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // Panel Norte (sin cambios)
+        // Panel Norte
         JPanel panelNorte = new JPanel(new FlowLayout());
+        panelNorte.setBackground(new Color(245, 245, 255));
         NZapato = new JTextField(20);
         JButton btnAgregar = new JButton("Agregar Zapato");
+        btnAgregar.setBackground(new Color(144, 238, 144)); // verde claro
+        btnAgregar.setFont(new Font("SansSerif", Font.BOLD, 12));
+        btnAgregar.setFocusPainted(false);
+        
         JButton btnEliminar = new JButton("Eliminar");
+        btnEliminar.setBackground(new Color(255, 182, 193)); // rosa claro
+        btnEliminar.setFont(new Font("SansSerif", Font.BOLD, 12));
+        btnEliminar.setFocusPainted(false);
+        
         panelNorte.add(new JLabel("Nuevo Zapato:"));
+        JLabel lblNuevo = new JLabel("Nuevo Zapato:");
+        lblNuevo.setFont(new Font("SansSerif", Font.BOLD, 14));
+        lblNuevo.setForeground(new Color(50, 50, 120));
         panelNorte.add(NZapato);
+        NZapato.setBorder(BorderFactory.createCompoundBorder(
+        BorderFactory.createLineBorder(new Color(200, 200, 200), 1, true),
+        BorderFactory.createEmptyBorder(4, 8, 4, 8)
+       ));
         panelNorte.add(btnAgregar);
         panelNorte.add(btnEliminar);
+        panelNorte.add(lblNuevo);
         add(panelNorte, BorderLayout.NORTH);
 
-        // Lista (sin cambios)
+        // Lista
         modeloLista = new DefaultListModel<>();
         modeloLista.addElement("Nike");
         modeloLista.addElement("Adidas");
         modeloLista.addElement("Puma");
-        listaZapatos = new JList(modeloLista);
+        listaZapatos = new JList<>(modeloLista);
         add(new JScrollPane(listaZapatos), BorderLayout.CENTER);
 
-        // Panel opciones (sin cambios)
-        JPanel panelOpciones = new JPanel();
-        panelOpciones.setLayout(new FlowLayout());
+        // Panel opciones
+        JPanel panelOpciones = new JPanel(new FlowLayout());
         rbHombre = new JRadioButton("Hombre");
         rbMujer  = new JRadioButton("Mujer");
         ButtonGroup grupo = new ButtonGroup();
@@ -61,22 +80,11 @@ public class Ventana extends JFrame {
         panelOpciones.add(rbMujer);
         add(panelOpciones, BorderLayout.EAST);
 
-        // Listeners originales (sin cambios)
-        btnAgregar.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                agregarZapato();
-            }
-        });
-
-        btnEliminar.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                int indice = listaZapatos.getSelectedIndex();
-                if (indice != -1) {
-                    modeloLista.remove(indice);
-                }
-            }
+        // Listeners
+        btnAgregar.addActionListener(e -> agregarZapato());
+        btnEliminar.addActionListener(e -> {
+            int indice = listaZapatos.getSelectedIndex();
+            if (indice != -1) modeloLista.remove(indice);
         });
 
         // Doble clic en Nike / Adidas / Puma abre su propio catálogo
@@ -95,7 +103,7 @@ public class Ventana extends JFrame {
                             );
                             return;
                         }
-                        String marca  = (String) modeloLista.getElementAt(indice);
+                        String marca  = modeloLista.getElementAt(indice);
                         String genero = rbHombre.isSelected() ? "hombre" : "mujer";
                         abrirCatalogo(marca, genero);
                     }
@@ -107,62 +115,134 @@ public class Ventana extends JFrame {
     private void abrirCatalogo(String marca, String genero) {
         JDialog catalogo = new JDialog(this,
             "Catálogo " + marca + " — " + capitalizar(genero), true);
-        catalogo.setSize(620, 500);
+        catalogo.setSize(750, 550);
         catalogo.setLocationRelativeTo(this);
         catalogo.setLayout(new BorderLayout());
 
-        // Título
-        JLabel titulo = new JLabel(
-            "  " + marca + "  |  " + capitalizar(genero),
-            SwingConstants.LEFT);
+        JLabel titulo = new JLabel("  " + marca + "  |  " + capitalizar(genero), SwingConstants.LEFT);
         titulo.setFont(new Font("SansSerif", Font.BOLD, 18));
         titulo.setBorder(BorderFactory.createEmptyBorder(12, 12, 8, 12));
         catalogo.add(titulo, BorderLayout.NORTH);
 
-        // Panel de imágenes 3 columnas
         JPanel panelImagenes = new JPanel(new GridLayout(0, 3, 12, 12));
         panelImagenes.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // Ruta: Proyecto1\Nike\hombre\  o  Proyecto1\Adidas\mujer\  etc.
-        File carpeta = new File(RUTA_BASE + File.separator + marca + File.separator + genero);
-        int encontrados = 0;
+        DefaultListModel<String> carrito = new DefaultListModel<>();
+        JList<String> listaCarrito = new JList<>(carrito);
+        JLabel lblTotal = new JLabel("Total: $0.00");
 
-        for (int i = 1; i <= 20; i++) {
+        JButton btnEliminarCarrito = new JButton("Eliminar");
+        btnEliminarCarrito.addActionListener(e -> {
+            int index = listaCarrito.getSelectedIndex();
+            if (index != -1) {
+                carrito.remove(index);
+                actualizarTotal(carrito, lblTotal);
+            }
+        });
+
+        JPanel panelCarrito = new JPanel(new BorderLayout());
+        panelCarrito.add(new JLabel("Carrito de compras:"), BorderLayout.NORTH);
+        panelCarrito.add(new JScrollPane(listaCarrito), BorderLayout.CENTER);
+
+        JPanel panelSurCarrito = new JPanel(new BorderLayout());
+        panelSurCarrito.add(lblTotal, BorderLayout.WEST);
+        panelSurCarrito.add(btnEliminarCarrito, BorderLayout.EAST);
+
+        panelCarrito.add(panelSurCarrito, BorderLayout.SOUTH);
+        catalogo.add(panelCarrito, BorderLayout.EAST);
+
+        File carpeta = new File(RUTA_BASE + File.separator + marca + File.separator + genero);
+
+        // Solo mostrar la cantidad de modelos definida en los arreglos
+        int cantidadModelos;
+        switch (marca.toLowerCase()) {
+            case "nike":
+                cantidadModelos = preciosNike.length;
+                break;
+            case "adidas":
+                cantidadModelos = preciosAdidas.length;
+                break;
+            case "puma":
+                cantidadModelos = preciosPuma.length;
+                break;
+            default:
+                cantidadModelos = 0;
+        }
+
+        for (int i = 1; i <= cantidadModelos; i++) {
             String nombreArchivo = String.format("%02d.png", i);
             File archivo = new File(carpeta, nombreArchivo);
 
-            if (!archivo.exists()) {
-                if (encontrados == 0 && i > 6) break;
-                if (i <= 6) {
-                    panelImagenes.add(crearTarjeta(
-                        crearPlaceholder(nombreArchivo),
-                        "Modelo " + String.format("%02d", i)
-                    ));
-                }
-                continue;
+            double precio;
+            switch (marca.toLowerCase()) {
+                case "nike":
+                    precio = preciosNike[i - 1];
+                    break;
+                case "adidas":
+                    precio = preciosAdidas[i - 1];
+                    break;
+                case "puma":
+                    precio = preciosPuma[i - 1];
+                    break;
+                default:
+                    precio = 999.99 + i;
             }
 
-            panelImagenes.add(crearTarjeta(
-                escalarImagen(archivo.getAbsolutePath()),
-                "Modelo " + String.format("%02d", i)
-            ));
-            encontrados++;
+            Zapato zapato = new Zapato(
+                marca,
+                "Modelo " + String.format("%02d", i),
+                precio,
+                colorPorMarca(marca)
+            );
+
+            ImageIcon icono = archivo.exists()
+                ? escalarImagen(archivo.getAbsolutePath())
+                : crearPlaceholder(nombreArchivo);
+
+            panelImagenes.add(crearTarjeta(icono, zapato, carrito, lblTotal));
         }
 
-        if (encontrados == 0 && panelImagenes.getComponentCount() == 0) {
-            JLabel aviso = new JLabel(
-                "<html><center>No hay imágenes para " + marca + " — " + capitalizar(genero) + "<br>"
-                + "Pon tus archivos .png en:<br><b>"
-                + carpeta.getAbsolutePath() + "</b></center></html>",
-                SwingConstants.CENTER);
-            aviso.setFont(new Font("SansSerif", Font.PLAIN, 13));
-            catalogo.add(aviso, BorderLayout.CENTER);
-        } else {
-            catalogo.add(new JScrollPane(panelImagenes), BorderLayout.CENTER);
-        }
+        catalogo.add(new JScrollPane(panelImagenes), BorderLayout.CENTER);
 
-        JButton btnCerrar = new JButton("Cerrar");
-        btnCerrar.addActionListener(ev -> catalogo.dispose());
+        JButton btnCerrar = new JButton("Finalizar compra");
+        btnCerrar.addActionListener(ev -> {
+            // Validar que el total no sea cero
+            if (lblTotal.getText().equals("Total: $0.00")) {
+                JOptionPane.showMessageDialog(
+                    catalogo,
+                    "No puedes finalizar la compra con un total de $0.00",
+                    "Compra inválida",
+                    JOptionPane.WARNING_MESSAGE
+                );
+                return;
+            }
+
+            StringBuilder resumen = new StringBuilder("Has comprado:\n");
+            for (int i = 0; i < carrito.size(); i++) {
+                resumen.append("- ").append(carrito.get(i)).append("\n");
+            }
+            resumen.append(lblTotal.getText());
+
+            Object[] opciones = {"Cancelar", "Continuar"};
+            int seleccion = JOptionPane.showOptionDialog(
+                catalogo,
+                resumen.toString(),
+                "Resumen de compra",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.INFORMATION_MESSAGE,
+                null,
+                opciones,
+                opciones[0]
+            );
+
+            if (seleccion == 0) {
+                catalogo.dispose();
+                Ventana.this.setVisible(true);
+            } else if (seleccion == 1) {
+                abrirSeccionPagos();
+            }
+        });
+
         JPanel sur = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         sur.add(btnCerrar);
         catalogo.add(sur, BorderLayout.SOUTH);
@@ -170,21 +250,42 @@ public class Ventana extends JFrame {
         catalogo.setVisible(true);
     }
 
-    private JPanel crearTarjeta(ImageIcon icono, String etiqueta) {
-        JPanel tarjeta = new JPanel(new BorderLayout());
-        tarjeta.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
-        tarjeta.setBackground(Color.WHITE);
-        JLabel imgLabel = new JLabel(icono, SwingConstants.CENTER);
-        imgLabel.setBorder(BorderFactory.createEmptyBorder(6, 6, 4, 6));
-        JLabel nombre = new JLabel(etiqueta, SwingConstants.CENTER);
-        nombre.setFont(new Font("SansSerif", Font.PLAIN, 11));
-        nombre.setBorder(BorderFactory.createEmptyBorder(0, 0, 6, 0));
+      private JPanel crearTarjeta(ImageIcon icono, Zapato zapato, DefaultListModel<String> carrito, JLabel lblTotal) {
+          JPanel tarjeta = new JPanel(new BorderLayout());
+          tarjeta.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
+          tarjeta.setBackground(zapato.color);
+
+         JLabel imgLabel = new JLabel(icono, SwingConstants.CENTER);
+         imgLabel.setBorder(BorderFactory.createEmptyBorder(6, 6, 4, 6));
+
+         JLabel nombre = new JLabel(zapato.modelo + " - $" + zapato.precio, SwingConstants.CENTER);
+         nombre.setFont(new Font("SansSerif", Font.PLAIN, 11));
+         nombre.setBorder(BorderFactory.createEmptyBorder(0, 0, 6, 0));
+
+         JButton btnSeleccionar = new JButton("Agregar");
+         btnSeleccionar.addActionListener(e -> {
+        carrito.addElement(zapato.marca + " - " + zapato.modelo + " $" + zapato.precio);
+        actualizarTotal(carrito, lblTotal);
+    });
+
         tarjeta.add(imgLabel, BorderLayout.CENTER);
-        tarjeta.add(nombre,   BorderLayout.SOUTH);
-        return tarjeta;
+        tarjeta.add(nombre, BorderLayout.SOUTH);
+        tarjeta.add(btnSeleccionar, BorderLayout.NORTH);
+
+       return tarjeta;
+     }
+ 
+         private void actualizarTotal(DefaultListModel<String> carrito, JLabel lblTotal) {
+        double total = 0;
+        for (int i = 0; i < carrito.size(); i++) {
+            String item = carrito.get(i);
+            String precioStr = item.substring(item.lastIndexOf("$") + 1);
+            total += Double.parseDouble(precioStr);
+        }
+        lblTotal.setText("Total: $" + String.format("%.2f", total));
     }
 
-    private ImageIcon escalarImagen(String ruta) {
+        private ImageIcon escalarImagen(String ruta) {
         try {
             ImageIcon original = new ImageIcon(ruta);
             if (original.getIconWidth() > 0) {
@@ -196,7 +297,7 @@ public class Ventana extends JFrame {
         return crearPlaceholder("error");
     }
 
-    private ImageIcon crearPlaceholder(String texto) {
+        private ImageIcon crearPlaceholder(String texto) {
         int w = 150, h = 130;
         java.awt.image.BufferedImage img =
             new java.awt.image.BufferedImage(w, h,
@@ -225,4 +326,44 @@ public class Ventana extends JFrame {
             NZapato.setText("");
         }
     }
+
+    class Zapato {
+        String marca;
+        String modelo;
+        double precio;
+        Color color;
+
+        Zapato(String marca, String modelo, double precio, Color color) {
+            this.marca = marca;
+            this.modelo = modelo;
+            this.precio = precio;
+            this.color = color;
+        }
+    }
+
+    private Color colorPorMarca(String marca) {
+        switch (marca.toLowerCase()) {
+            case "nike":
+                return new Color(173, 216, 230);
+            case "adidas":
+                return new Color(144, 238, 144); 
+            case "puma":
+                return new Color(255, 182, 193); 
+            default:
+                return Color.LIGHT_GRAY; 
+        }
+    }
+
+    
+        private void abrirSeccionPagos() {
+        JDialog pagos = new JDialog(this, "Sección de Pagos", true);
+        pagos.setSize(400, 300);
+        pagos.setLocationRelativeTo(this);
+        pagos.setLayout(new BorderLayout());
+
+        pagos.setVisible(true);
+    }
+
+    
 }
+
