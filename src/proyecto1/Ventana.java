@@ -12,7 +12,6 @@ public class Ventana extends JFrame {
 
     private DefaultListModel<String> modeloLista;
     private JList<String> listaZapatos;
-    private JTextField NZapato;
     private JRadioButton rbHombre;
     private JRadioButton rbMujer;
     private JPanel panelImagenes;
@@ -23,37 +22,43 @@ public class Ventana extends JFrame {
     private static final double[] preciosAdidas = {1100, 1250, 1400, 1550, 1700, 1850};
     private static final double[] preciosPuma   = {1000, 1150, 1300, 1450, 1600, 1750};
 
+    //Método auxiliar para escalar cualquier ícono
+    private ImageIcon cargarIcono(String nombre, int ancho, int alto) {
+        try {
+            java.net.URL url = getClass().getResource(nombre);
+            if (url != null) {
+                ImageIcon original = new ImageIcon(url);
+                Image escalada = original.getImage().getScaledInstance(ancho, alto, Image.SCALE_SMOOTH);
+                return new ImageIcon(escalada);
+            }
+        } catch (Exception ignored) {}
+        return null;
+    }
+
     public Ventana() {
         super("Tienda de Zapatos");
         setSize(600, 500);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // Panel Norte
-        JPanel panelNorte = new JPanel(new FlowLayout());
-        panelNorte.setBackground(new Color(245, 245, 255));
+        // ── Panel Norte ──────────────────────────────────────────
+        JPanel panelNorte = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 8));
+        panelNorte.setBackground(new Color(51, 204, 153));
 
-        NZapato = new JTextField(20);
-        NZapato.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(200, 200, 200), 1, true),
-            BorderFactory.createEmptyBorder(4, 8, 4, 8)
-        ));
+        //Logo en el panel norte
+        ImageIcon iconoLogo = cargarIcono("logo.png", 40, 40);
+        if (iconoLogo != null) {
+            panelNorte.add(new JLabel(iconoLogo));
+        }
 
-        JLabel lblNuevo = new JLabel("Nuevo Zapato:");
-        lblNuevo.setFont(new Font("SansSerif", Font.BOLD, 14));
+        JLabel lblNuevo = new JLabel("ZAPATERÍA PASO A PASO");
+        lblNuevo.setFont(new Font("SansSerif", Font.BOLD, 16));
         lblNuevo.setForeground(new Color(50, 50, 120));
-
-        JButton btnAgregar = new JButton("Agregar Zapato");
-        btnAgregar.setBackground(new Color(144, 238, 144));
-        btnAgregar.setFont(new Font("SansSerif", Font.BOLD, 12));
-        btnAgregar.setFocusPainted(false);
-
         panelNorte.add(lblNuevo);
-        panelNorte.add(NZapato);
-        panelNorte.add(btnAgregar);
+
         add(panelNorte, BorderLayout.NORTH);
 
-        // Lista de marcas
+        // ── Lista de marcas ──────────────────────────────────────
         modeloLista = new DefaultListModel<>();
         modeloLista.addElement("Nike");
         modeloLista.addElement("Adidas");
@@ -62,7 +67,7 @@ public class Ventana extends JFrame {
         listaZapatos.setFont(new Font("SansSerif", Font.PLAIN, 14));
         add(new JScrollPane(listaZapatos), BorderLayout.CENTER);
 
-        // Panel opciones género
+        // ── Panel opciones género ────────────────────────────────
         JPanel panelOpciones = new JPanel(new FlowLayout());
         rbHombre = new JRadioButton("Hombre");
         rbMujer  = new JRadioButton("Mujer");
@@ -71,58 +76,44 @@ public class Ventana extends JFrame {
         grupo.add(rbMujer);
         panelOpciones.add(rbHombre);
         panelOpciones.add(rbMujer);
+        panelOpciones.setBackground(new Color(102, 153, 153));
         add(panelOpciones, BorderLayout.EAST);
 
-        btnAgregar.addActionListener(e -> agregarZapato());
-
-        // Teclado: presionar Q abre catálogo
+        // ── Teclado Q abre catálogo ──────────────────────────────
         listaZapatos.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_Q) {
-                    int indice = listaZapatos.getSelectedIndex();
-                    if (indice != -1) {
-                        if (!rbHombre.isSelected() && !rbMujer.isSelected()) {
-                            JOptionPane.showMessageDialog(
-                                Ventana.this,
-                                "Por favor selecciona primero: Hombre o Mujer.",
-                                "Selección requerida",
-                                JOptionPane.WARNING_MESSAGE
-                            );
-                            return;
-                        }
-                        String marca  = modeloLista.getElementAt(indice);
-                        String genero = rbHombre.isSelected() ? "hombre" : "mujer";
-                        abrirCatalogo(marca, genero);
-                    }
+                    abrirCatalogoSiSeleccionado();
                 }
             }
         });
 
-        // Doble clic también abre catálogo
+        // ── Doble clic abre catálogo ─────────────────────────────
         listaZapatos.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2) {
-                    int indice = listaZapatos.getSelectedIndex();
-                    if (indice != -1) {
-                        if (!rbHombre.isSelected() && !rbMujer.isSelected()) {
-                            JOptionPane.showMessageDialog(
-                                Ventana.this,
-                                "Por favor selecciona primero: Hombre o Mujer.",
-                                "Selección requerida",
-                                JOptionPane.WARNING_MESSAGE
-                            );
-                            return;
-                        }
-                        String marca  = modeloLista.getElementAt(indice);
-                        String genero = rbHombre.isSelected() ? "hombre" : "mujer";
-                        abrirCatalogo(marca, genero);
-                    }
+                    abrirCatalogoSiSeleccionado();
                 }
             }
         });
-    } // ✅ fin del constructor Ventana()
+    } //fin constructor
+
+    private void abrirCatalogoSiSeleccionado() {
+        int indice = listaZapatos.getSelectedIndex();
+        if (indice != -1) {
+            if (!rbHombre.isSelected() && !rbMujer.isSelected()) {
+                JOptionPane.showMessageDialog(this,
+                    "Por favor selecciona primero: Hombre o Mujer.",
+                    "Selección requerida", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            String marca  = modeloLista.getElementAt(indice);
+            String genero = rbHombre.isSelected() ? "hombre" : "mujer";
+            abrirCatalogo(marca, genero);
+        }
+    }
 
     private void abrirCatalogo(String marca, String genero) {
         JDialog catalogo = new JDialog(this,
@@ -131,21 +122,39 @@ public class Ventana extends JFrame {
         catalogo.setLocationRelativeTo(this);
         catalogo.setLayout(new BorderLayout());
 
-        JLabel titulo = new JLabel("  " + marca + "  |  " + capitalizar(genero), SwingConstants.LEFT);
-        titulo.setFont(new Font("SansSerif", Font.BOLD, 18));
-        titulo.setBorder(BorderFactory.createEmptyBorder(12, 12, 8, 12));
-        catalogo.add(titulo, BorderLayout.NORTH);
+        // Título con logo pequeño
+        JPanel panelTitulo = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 6));
+        panelTitulo.setBackground(new Color(230, 245, 255));
 
+        ImageIcon iconoLogoTitulo = cargarIcono("logo.png", 30, 30);
+        if (iconoLogoTitulo != null) {
+            panelTitulo.add(new JLabel(iconoLogoTitulo));
+        }
+
+        JLabel titulo = new JLabel(marca + "  |  " + capitalizar(genero));
+        titulo.setFont(new Font("SansSerif", Font.BOLD, 18));
+        titulo.setForeground(new Color(102, 51, 0));
+        panelTitulo.add(titulo);
+        catalogo.add(panelTitulo, BorderLayout.NORTH);
+
+        // Panel de imágenes
         panelImagenes = new JPanel(new GridLayout(0, 3, 12, 12));
         panelImagenes.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         panelImagenes.addMouseListener(new ManejadorRaton());
 
-        // Carrito
+        // ── Carrito ──────────────────────────────────────────────
         DefaultListModel<String> carrito = new DefaultListModel<>();
         JList<String> listaCarrito = new JList<>(carrito);
         JLabel lblTotal = new JLabel("Total: $0.00");
 
-        JButton btnEliminarCarrito = new JButton("Eliminar");
+        //Botón Eliminar del carrito con imagen borrar.png
+        JButton btnEliminarCarrito;
+        ImageIcon iconoBorrar = cargarIcono("borrar.png", 20, 20);
+        if (iconoBorrar != null) {
+            btnEliminarCarrito = new JButton("Eliminar", iconoBorrar);
+        } else {
+            btnEliminarCarrito = new JButton("Eliminar");
+        }
         btnEliminarCarrito.addActionListener(e -> {
             int index = listaCarrito.getSelectedIndex();
             if (index != -1) {
@@ -156,6 +165,7 @@ public class Ventana extends JFrame {
 
         JPanel panelCarrito = new JPanel(new BorderLayout());
         panelCarrito.setPreferredSize(new Dimension(200, 0));
+        panelCarrito.setBackground(new Color(204, 255, 204));
         panelCarrito.add(new JLabel("Carrito de compras:"), BorderLayout.NORTH);
         panelCarrito.add(new JScrollPane(listaCarrito), BorderLayout.CENTER);
 
@@ -165,6 +175,7 @@ public class Ventana extends JFrame {
         panelCarrito.add(panelSurCarrito, BorderLayout.SOUTH);
         catalogo.add(panelCarrito, BorderLayout.EAST);
 
+        // ── Cargar modelos ───────────────────────────────────────
         File carpeta = new File(RUTA_BASE + File.separator + marca + File.separator + genero);
 
         int cantidadModelos;
@@ -203,15 +214,13 @@ public class Ventana extends JFrame {
 
         catalogo.add(new JScrollPane(panelImagenes), BorderLayout.CENTER);
 
+        // ── Botón Finalizar compra ───────────────────────────────
         JButton btnFinalizar = new JButton("Finalizar compra");
         btnFinalizar.addActionListener(ev -> {
             if (lblTotal.getText().equals("Total: $0.00")) {
-                JOptionPane.showMessageDialog(
-                    catalogo,
+                JOptionPane.showMessageDialog(catalogo,
                     "No puedes finalizar la compra con un total de $0.00",
-                    "Compra inválida",
-                    JOptionPane.WARNING_MESSAGE
-                );
+                    "Compra inválida", JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
@@ -222,16 +231,10 @@ public class Ventana extends JFrame {
             resumen.append(lblTotal.getText());
 
             Object[] opciones = {"Cancelar", "Continuar"};
-            int seleccion = JOptionPane.showOptionDialog(
-                catalogo,
-                resumen.toString(),
-                "Resumen de compra",
-                JOptionPane.DEFAULT_OPTION,
-                JOptionPane.INFORMATION_MESSAGE,
-                null,
-                opciones,
-                opciones[0]
-            );
+            int seleccion = JOptionPane.showOptionDialog(catalogo,
+                resumen.toString(), "Resumen de compra",
+                JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE,
+                null, opciones, opciones[0]);
 
             if (seleccion == 0) {
                 catalogo.dispose();
@@ -247,7 +250,7 @@ public class Ventana extends JFrame {
         catalogo.add(sur, BorderLayout.SOUTH);
 
         catalogo.setVisible(true);
-    } // ✅ fin de abrirCatalogo()
+    } //fin abrirCatalogo()
 
     private void abrirFormularioCliente(DefaultListModel<String> carrito, JLabel lblTotal) {
         JDialog formulario = new JDialog(this, "Datos del Cliente", true);
@@ -279,8 +282,7 @@ public class Ventana extends JFrame {
             if (nombre.isEmpty() || telefono.isEmpty()) {
                 JOptionPane.showMessageDialog(formulario,
                     "Por favor ingresa tu nombre y número de teléfono.",
-                    "Campos requeridos",
-                    JOptionPane.WARNING_MESSAGE);
+                    "Campos requeridos", JOptionPane.WARNING_MESSAGE);
                 return;
             }
             formulario.dispose();
@@ -292,7 +294,7 @@ public class Ventana extends JFrame {
         formulario.add(panelBtn, BorderLayout.SOUTH);
 
         formulario.setVisible(true);
-    } // ✅ fin de abrirFormularioCliente()
+    }
 
     private void mostrarRecibo(String nombreCliente, String telefono,
                                DefaultListModel<String> carrito, JLabel lblTotal) {
@@ -335,7 +337,14 @@ public class Ventana extends JFrame {
         areaRecibo.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
         recibo.add(new JScrollPane(areaRecibo), BorderLayout.CENTER);
 
-        JButton btnCerrar = new JButton("Cerrar");
+        //Botón Cerrar con imagen borrar.png
+        JButton btnCerrar;
+        ImageIcon iconoBorrarRecibo = cargarIcono("borrar.png", 18, 18);
+        if (iconoBorrarRecibo != null) {
+            btnCerrar = new JButton("Cerrar", iconoBorrarRecibo);
+        } else {
+            btnCerrar = new JButton("Cerrar");
+        }
         btnCerrar.setBackground(new Color(255, 182, 193));
         btnCerrar.setFont(new Font("SansSerif", Font.BOLD, 12));
         btnCerrar.addActionListener(e -> {
@@ -348,9 +357,8 @@ public class Ventana extends JFrame {
         recibo.add(panelBtn, BorderLayout.SOUTH);
 
         recibo.setVisible(true);
-    } // ✅ fin de mostrarRecibo()
+    }
 
-    // ✅ Clase interna bien ubicada: dentro de Ventana, fuera de métodos
     private class ManejadorRaton implements MouseListener {
         private JLabel targetLabel;
 
@@ -362,11 +370,7 @@ public class Ventana extends JFrame {
         @Override
         public void mousePressed(MouseEvent e) {
             Component c = panelImagenes.getComponentAt(e.getPoint());
-            if (c instanceof JLabel) {
-                targetLabel = (JLabel) c;
-            } else {
-                targetLabel = null;
-            }
+            targetLabel = (c instanceof JLabel) ? (JLabel) c : null;
         }
     }
 
@@ -383,7 +387,14 @@ public class Ventana extends JFrame {
         nombre.setFont(new Font("SansSerif", Font.PLAIN, 11));
         nombre.setBorder(BorderFactory.createEmptyBorder(0, 0, 6, 0));
 
-        JButton btnAgregar = new JButton("Agregar");
+        // ✅ Botón Agregar con imagen mas.png
+        JButton btnAgregar;
+        ImageIcon iconoMas = cargarIcono("mas.png", 18, 18);
+        if (iconoMas != null) {
+            btnAgregar = new JButton("Agregar", iconoMas);
+        } else {
+            btnAgregar = new JButton("Agregar");
+        }
         btnAgregar.addActionListener(e -> {
             carrito.addElement(zapato.marca + " - " + zapato.modelo + " $" + zapato.precio);
             actualizarTotal(carrito, lblTotal);
@@ -398,7 +409,7 @@ public class Ventana extends JFrame {
     private void actualizarTotal(DefaultListModel<String> carrito, JLabel lblTotal) {
         double total = 0;
         for (int i = 0; i < carrito.size(); i++) {
-            String item      = carrito.get(i);
+            String item = carrito.get(i);
             String precioStr = item.substring(item.lastIndexOf("$") + 1);
             total += Double.parseDouble(precioStr);
         }
@@ -438,15 +449,6 @@ public class Ventana extends JFrame {
         return s.substring(0, 1).toUpperCase() + s.substring(1);
     }
 
-    private void agregarZapato() {
-        String nombre = NZapato.getText().trim();
-        if (!nombre.isEmpty()) {
-            modeloLista.addElement(nombre);
-            NZapato.setText("");
-        }
-    }
-
-    // ✅ Clase Zapato dentro de Ventana, justo antes del cierre final
     class Zapato {
         String marca, modelo;
         double precio;
@@ -468,5 +470,4 @@ public class Ventana extends JFrame {
             default:       return Color.LIGHT_GRAY;
         }
     }
-
-} // ✅ cierre final de la clase Ventana
+}  
