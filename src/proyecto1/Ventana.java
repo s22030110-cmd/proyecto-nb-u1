@@ -4,14 +4,18 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Random;
+
 
 public class Ventana extends JFrame {
 
     private DefaultListModel<String> modeloLista;
     private JList<String> listaZapatos;
-    private JTextField NZapato;
     private JRadioButton rbHombre;
     private JRadioButton rbMujer;
+     private JPanel panelImagenes;
 
     
     private static final String RUTA_BASE = "C:\\Users\\joser\\OneDrive\\Escritorio\\Proyecto1";
@@ -28,33 +32,14 @@ public class Ventana extends JFrame {
 
         // Panel Norte
         JPanel panelNorte = new JPanel(new FlowLayout());
-        panelNorte.setBackground(new Color(245, 245, 255));
+        panelNorte.setBackground(new Color(51, 204,153));
 
-        NZapato = new JTextField(20);
-        NZapato.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(200, 200, 200), 1, true),
-            BorderFactory.createEmptyBorder(4, 8, 4, 8)
-        ));
+        
 
-        JLabel lblNuevo = new JLabel("Nuevo Zapato:");
+        JLabel lblNuevo = new JLabel("ZAPATERÍA PASO A PASO");
         lblNuevo.setFont(new Font("SansSerif", Font.BOLD, 14));
         lblNuevo.setForeground(new Color(50, 50, 120));
-
-        JButton btnAgregar = new JButton("Agregar Zapato");
-        btnAgregar.setBackground(new Color(144, 238, 144));
-        btnAgregar.setFont(new Font("SansSerif", Font.BOLD, 12));
-        btnAgregar.setFocusPainted(false);
-
-        JButton btnEliminar = new JButton("Eliminar");
-        btnEliminar.setBackground(new Color(255, 182, 193));
-        btnEliminar.setFont(new Font("SansSerif", Font.BOLD, 12));
-        btnEliminar.setFocusPainted(false);
-
-        // ✅ Se eliminó el JLabel duplicado "Nuevo Zapato:"
         panelNorte.add(lblNuevo);
-        panelNorte.add(NZapato);
-        panelNorte.add(btnAgregar);
-        panelNorte.add(btnEliminar);
         add(panelNorte, BorderLayout.NORTH);
 
         // Lista de marcas
@@ -75,16 +60,34 @@ public class Ventana extends JFrame {
         grupo.add(rbMujer);
         panelOpciones.add(rbHombre);
         panelOpciones.add(rbMujer);
+        panelOpciones.setBackground(new Color(102, 153, 153));
         add(panelOpciones, BorderLayout.EAST);
 
-        // Listeners botones
-        btnAgregar.addActionListener(e -> agregarZapato());
-        btnEliminar.addActionListener(e -> {
-            int indice = listaZapatos.getSelectedIndex();
-            if (indice != -1) modeloLista.remove(indice);
+        //Presionar Ctrl+q abre el catalogo
+        listaZapatos.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_Q) {
+                    int indice = listaZapatos.getSelectedIndex();
+                    if (indice != -1) {
+                        if (!rbHombre.isSelected() && !rbMujer.isSelected()) {
+                            JOptionPane.showMessageDialog(
+                                Ventana.this,
+                                "Por favor selecciona primero: Hombre o Mujer.",
+                                "Selección requerida",
+                                JOptionPane.WARNING_MESSAGE
+                            );
+                            return;
+                        }
+                        String marca  = modeloLista.getElementAt(indice);
+                        String genero = rbHombre.isSelected() ? "hombre" : "mujer";
+                        abrirCatalogo(marca, genero);
+                    }
+                }
+            }
         });
-
-        // Doble clic abre catálogo
+    
+        // Doble clic tambien abre catálogo
         listaZapatos.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -107,7 +110,7 @@ public class Ventana extends JFrame {
                 }
             }
         });
-    }
+    }// ✅ fin del constructor Ventana()
 
     private void abrirCatalogo(String marca, String genero) {
         JDialog catalogo = new JDialog(this,
@@ -120,11 +123,13 @@ public class Ventana extends JFrame {
         JLabel titulo = new JLabel("  " + marca + "  |  " + capitalizar(genero), SwingConstants.LEFT);
         titulo.setFont(new Font("SansSerif", Font.BOLD, 18));
         titulo.setBorder(BorderFactory.createEmptyBorder(12, 12, 8, 12));
+        titulo.setForeground(new Color(102, 51, 0));
         catalogo.add(titulo, BorderLayout.NORTH);
 
         // Panel de imágenes
-        JPanel panelImagenes = new JPanel(new GridLayout(0, 3, 12, 12));
+        panelImagenes = new JPanel(new GridLayout(0, 3, 12, 12));
         panelImagenes.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
 
         // Carrito
         DefaultListModel<String> carrito = new DefaultListModel<>();
@@ -143,13 +148,13 @@ public class Ventana extends JFrame {
         JPanel panelCarrito = new JPanel(new BorderLayout());
         panelCarrito.setPreferredSize(new Dimension(200, 0));
         panelCarrito.add(new JLabel("Carrito de compras:"), BorderLayout.NORTH);
+        panelCarrito.setBackground(new Color(204, 255, 204));
         panelCarrito.add(new JScrollPane(listaCarrito), BorderLayout.CENTER);
 
         JPanel panelSurCarrito = new JPanel(new BorderLayout());
         panelSurCarrito.add(lblTotal, BorderLayout.WEST);
         panelSurCarrito.add(btnEliminarCarrito, BorderLayout.EAST);
         panelCarrito.add(panelSurCarrito, BorderLayout.SOUTH);
-
         catalogo.add(panelCarrito, BorderLayout.EAST);
 
        
@@ -228,16 +233,141 @@ public class Ventana extends JFrame {
                 catalogo.dispose();
                 Ventana.this.setVisible(true);
             } else if (seleccion == 1) {
-                abrirSeccionPagos();
+                catalogo.dispose();
+                abrirFormularioCliente(carrito, lblTotal);
             }
         });
+
 
         JPanel sur = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         sur.add(btnFinalizar);
         catalogo.add(sur, BorderLayout.SOUTH);
 
         catalogo.setVisible(true);
+    }// ✅ fin de abrirCatalogo()
+    
+    private void abrirFormularioCliente(DefaultListModel<String> carrito, JLabel lblTotal) {
+        JDialog formulario = new JDialog(this, "Datos del Cliente", true);
+        formulario.setSize(380, 220);
+        formulario.setLocationRelativeTo(this);
+        formulario.setLayout(new BorderLayout());
+
+        JPanel panelCampos = new JPanel(new GridLayout(3, 2, 10, 10));
+        panelCampos.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
+
+        JLabel lblNombre   = new JLabel("Nombre completo:");
+        JTextField txtNombre   = new JTextField();
+        JLabel lblTelefono = new JLabel("Número de teléfono:");
+        JTextField txtTelefono = new JTextField();
+
+        panelCampos.add(lblNombre);
+        panelCampos.add(txtNombre);
+        panelCampos.add(lblTelefono);
+        panelCampos.add(txtTelefono);
+        formulario.add(panelCampos, BorderLayout.CENTER);
+
+        JButton btnGenerar = new JButton("Generar Recibo");
+        btnGenerar.setBackground(new Color(144, 238, 144));
+        btnGenerar.setFont(new Font("SansSerif", Font.BOLD, 12));
+
+        btnGenerar.addActionListener(e -> {
+            String nombre   = txtNombre.getText().trim();
+            String telefono = txtTelefono.getText().trim();
+            if (nombre.isEmpty() || telefono.isEmpty()) {
+                JOptionPane.showMessageDialog(formulario,
+                    "Por favor ingresa tu nombre y número de teléfono.",
+                    "Campos requeridos",
+                    JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            formulario.dispose();
+            mostrarRecibo(nombre, telefono, carrito, lblTotal);
+        });
+
+        JPanel panelBtn = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        panelBtn.add(btnGenerar);
+        formulario.add(panelBtn, BorderLayout.SOUTH);
+
+        formulario.setVisible(true);
+    } // ✅ fin de abrirFormularioCliente()
+
+    private void mostrarRecibo(String nombreCliente, String telefono,
+                               DefaultListModel<String> carrito, JLabel lblTotal) {
+
+        String folio = "F-" + String.format("%06d", new Random().nextInt(999999) + 1);
+        LocalDateTime ahora = LocalDateTime.now();
+        String fecha = ahora.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        String hora  = ahora.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("════════════════════════════════════\n");
+        sb.append("         ZAPATERÍA PASO A PASO       \n");
+        sb.append("════════════════════════════════════\n");
+        sb.append("  Folio   : ").append(folio).append("\n");
+        sb.append("  Fecha   : ").append(fecha).append("\n");
+        sb.append("  Hora    : ").append(hora).append("\n");
+        sb.append("────────────────────────────────────\n");
+        sb.append("  Cliente : ").append(nombreCliente).append("\n");
+        sb.append("  Teléfono: ").append(telefono).append("\n");
+        sb.append("────────────────────────────────────\n");
+        sb.append("  ARTÍCULOS:\n");
+        for (int i = 0; i < carrito.size(); i++) {
+            sb.append("   ").append(i + 1).append(". ").append(carrito.get(i)).append("\n");
+        }
+        sb.append("────────────────────────────────────\n");
+        sb.append("  ").append(lblTotal.getText()).append("\n");
+        sb.append("════════════════════════════════════\n");
+        sb.append("      ¡Gracias por su compra!        \n");
+        sb.append("════════════════════════════════════\n");
+
+        JDialog recibo = new JDialog(this, "Recibo de Compra", true);
+        recibo.setSize(440, 480);
+        recibo.setLocationRelativeTo(this);
+        recibo.setLayout(new BorderLayout());
+
+        JTextArea areaRecibo = new JTextArea(sb.toString());
+        areaRecibo.setFont(new Font("Monospaced", Font.PLAIN, 13));
+        areaRecibo.setEditable(false);
+        areaRecibo.setBackground(new Color(255, 255, 240));
+        areaRecibo.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+        recibo.add(new JScrollPane(areaRecibo), BorderLayout.CENTER);
+
+        JButton btnCerrar = new JButton("Cerrar");
+        btnCerrar.setBackground(new Color(255, 182, 193));
+        btnCerrar.setFont(new Font("SansSerif", Font.BOLD, 12));
+        btnCerrar.addActionListener(e -> {
+            recibo.dispose();
+            System.exit(0);
+        });
+
+        JPanel panelBtn = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        panelBtn.add(btnCerrar);
+        recibo.add(panelBtn, BorderLayout.SOUTH);
+
+        recibo.setVisible(true);
+    } // ✅ fin de mostrarRecibo()
+
+    // ✅ Clase interna bien ubicada: dentro de Ventana, fuera de métodos
+    private class ManejadorRaton implements MouseListener {
+        private JLabel targetLabel;
+
+        @Override public void mouseClicked(MouseEvent e)  {}
+        @Override public void mouseReleased(MouseEvent e) {}
+        @Override public void mouseEntered(MouseEvent e)  {}
+        @Override public void mouseExited(MouseEvent e)   {}
+
+        @Override
+        public void mousePressed(MouseEvent e) {
+            Component c = panelImagenes.getComponentAt(e.getPoint());
+            if (c instanceof JLabel) {
+                targetLabel = (JLabel) c;
+            } else {
+                targetLabel = null;
+            }
+        }
     }
+
+
 
     private JPanel crearTarjeta(ImageIcon icono, Zapato zapato,
                                 DefaultListModel<String> carrito, JLabel lblTotal) {
@@ -307,14 +437,9 @@ public class Ventana extends JFrame {
         if (s == null || s.isEmpty()) return s;
         return s.substring(0, 1).toUpperCase() + s.substring(1);
     }
-
-    private void agregarZapato() {
-        String nombre = NZapato.getText().trim();
-        if (!nombre.isEmpty()) {
-            modeloLista.addElement(nombre);
-            NZapato.setText("");
-        }
-    }
+ 
+        
+    
 
     class Zapato {
         String marca;
@@ -338,23 +463,5 @@ public class Ventana extends JFrame {
             default:       return Color.LIGHT_GRAY;
         }
     }
-
-    private void abrirSeccionPagos() {
-        JDialog pagos = new JDialog(this, "Sección de Pagos", true);
-        pagos.setSize(400, 300);
-        pagos.setLocationRelativeTo(this);
-        pagos.setLayout(new BorderLayout());
-
-        JLabel lblMensaje = new JLabel("Procesando pago...", SwingConstants.CENTER);
-        lblMensaje.setFont(new Font("SansSerif", Font.BOLD, 16));
-        pagos.add(lblMensaje, BorderLayout.CENTER);
-
-        JButton btnCerrar = new JButton("Cerrar");
-        btnCerrar.addActionListener(e -> pagos.dispose());
-        JPanel sur = new JPanel();
-        sur.add(btnCerrar);
-        pagos.add(sur, BorderLayout.SOUTH);
-
-        pagos.setVisible(true);
-    }
 }
+   
