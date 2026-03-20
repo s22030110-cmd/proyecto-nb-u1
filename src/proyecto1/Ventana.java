@@ -29,7 +29,7 @@ public class Ventana extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // Panel Norte — sin botón Eliminar
+        // Panel Norte
         JPanel panelNorte = new JPanel(new FlowLayout());
         panelNorte.setBackground(new Color(245, 245, 255));
 
@@ -48,7 +48,6 @@ public class Ventana extends JFrame {
         btnAgregar.setFont(new Font("SansSerif", Font.BOLD, 12));
         btnAgregar.setFocusPainted(false);
 
-        // ✅ Botón Eliminar QUITADO del panel norte
         panelNorte.add(lblNuevo);
         panelNorte.add(NZapato);
         panelNorte.add(btnAgregar);
@@ -76,17 +75,17 @@ public class Ventana extends JFrame {
 
         btnAgregar.addActionListener(e -> agregarZapato());
 
-        // Doble clic abre catálogo
-        listaZapatos.addMouseListener(new MouseAdapter() {
+        // Teclado: presionar Q abre catálogo
+        listaZapatos.addKeyListener(new KeyAdapter() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_Q) {
                     int indice = listaZapatos.getSelectedIndex();
                     if (indice != -1) {
                         if (!rbHombre.isSelected() && !rbMujer.isSelected()) {
                             JOptionPane.showMessageDialog(
                                 Ventana.this,
-                                "Por favor selecciona primero Hombre o Mujer.",
+                                "Por favor selecciona primero: Hombre o Mujer.",
                                 "Selección requerida",
                                 JOptionPane.WARNING_MESSAGE
                             );
@@ -99,7 +98,31 @@ public class Ventana extends JFrame {
                 }
             }
         });
-    }
+
+        // Doble clic también abre catálogo
+        listaZapatos.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    int indice = listaZapatos.getSelectedIndex();
+                    if (indice != -1) {
+                        if (!rbHombre.isSelected() && !rbMujer.isSelected()) {
+                            JOptionPane.showMessageDialog(
+                                Ventana.this,
+                                "Por favor selecciona primero: Hombre o Mujer.",
+                                "Selección requerida",
+                                JOptionPane.WARNING_MESSAGE
+                            );
+                            return;
+                        }
+                        String marca  = modeloLista.getElementAt(indice);
+                        String genero = rbHombre.isSelected() ? "hombre" : "mujer";
+                        abrirCatalogo(marca, genero);
+                    }
+                }
+            }
+        });
+    } // ✅ fin del constructor Ventana()
 
     private void abrirCatalogo(String marca, String genero) {
         JDialog catalogo = new JDialog(this,
@@ -180,7 +203,6 @@ public class Ventana extends JFrame {
 
         catalogo.add(new JScrollPane(panelImagenes), BorderLayout.CENTER);
 
-        // Botón finalizar compra
         JButton btnFinalizar = new JButton("Finalizar compra");
         btnFinalizar.addActionListener(ev -> {
             if (lblTotal.getText().equals("Total: $0.00")) {
@@ -215,7 +237,6 @@ public class Ventana extends JFrame {
                 catalogo.dispose();
                 Ventana.this.setVisible(true);
             } else if (seleccion == 1) {
-                // ✅ Al dar Continuar se piden datos del cliente y se genera el recibo
                 catalogo.dispose();
                 abrirFormularioCliente(carrito, lblTotal);
             }
@@ -226,9 +247,8 @@ public class Ventana extends JFrame {
         catalogo.add(sur, BorderLayout.SOUTH);
 
         catalogo.setVisible(true);
-    }
+    } // ✅ fin de abrirCatalogo()
 
-    // ✅ NUEVO: Pide nombre y teléfono antes de generar el recibo
     private void abrirFormularioCliente(DefaultListModel<String> carrito, JLabel lblTotal) {
         JDialog formulario = new JDialog(this, "Datos del Cliente", true);
         formulario.setSize(380, 220);
@@ -238,9 +258,8 @@ public class Ventana extends JFrame {
         JPanel panelCampos = new JPanel(new GridLayout(3, 2, 10, 10));
         panelCampos.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
 
-        JLabel lblNombre = new JLabel("Nombre completo:");
-        JTextField txtNombre = new JTextField();
-
+        JLabel lblNombre   = new JLabel("Nombre completo:");
+        JTextField txtNombre   = new JTextField();
         JLabel lblTelefono = new JLabel("Número de teléfono:");
         JTextField txtTelefono = new JTextField();
 
@@ -248,7 +267,6 @@ public class Ventana extends JFrame {
         panelCampos.add(txtNombre);
         panelCampos.add(lblTelefono);
         panelCampos.add(txtTelefono);
-
         formulario.add(panelCampos, BorderLayout.CENTER);
 
         JButton btnGenerar = new JButton("Generar Recibo");
@@ -256,9 +274,8 @@ public class Ventana extends JFrame {
         btnGenerar.setFont(new Font("SansSerif", Font.BOLD, 12));
 
         btnGenerar.addActionListener(e -> {
-            String nombre    = txtNombre.getText().trim();
-            String telefono  = txtTelefono.getText().trim();
-
+            String nombre   = txtNombre.getText().trim();
+            String telefono = txtTelefono.getText().trim();
             if (nombre.isEmpty() || telefono.isEmpty()) {
                 JOptionPane.showMessageDialog(formulario,
                     "Por favor ingresa tu nombre y número de teléfono.",
@@ -266,7 +283,6 @@ public class Ventana extends JFrame {
                     JOptionPane.WARNING_MESSAGE);
                 return;
             }
-
             formulario.dispose();
             mostrarRecibo(nombre, telefono, carrito, lblTotal);
         });
@@ -276,19 +292,16 @@ public class Ventana extends JFrame {
         formulario.add(panelBtn, BorderLayout.SOUTH);
 
         formulario.setVisible(true);
-    }
+    } // ✅ fin de abrirFormularioCliente()
 
-    // ✅ NUEVO: Muestra el recibo completo y al cerrar termina la ejecución
     private void mostrarRecibo(String nombreCliente, String telefono,
                                DefaultListModel<String> carrito, JLabel lblTotal) {
 
-        // Generar folio y fecha/hora
-        String folio  = "F-" + String.format("%06d", new Random().nextInt(999999) + 1);
+        String folio = "F-" + String.format("%06d", new Random().nextInt(999999) + 1);
         LocalDateTime ahora = LocalDateTime.now();
-        String fecha  = ahora.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-        String hora   = ahora.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+        String fecha = ahora.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        String hora  = ahora.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
 
-        // Construir el texto del recibo
         StringBuilder sb = new StringBuilder();
         sb.append("════════════════════════════════════\n");
         sb.append("         ZAPATERÍA PASO A PASO       \n");
@@ -301,18 +314,15 @@ public class Ventana extends JFrame {
         sb.append("  Teléfono: ").append(telefono).append("\n");
         sb.append("────────────────────────────────────\n");
         sb.append("  ARTÍCULOS:\n");
-
         for (int i = 0; i < carrito.size(); i++) {
             sb.append("   ").append(i + 1).append(". ").append(carrito.get(i)).append("\n");
         }
-
         sb.append("────────────────────────────────────\n");
         sb.append("  ").append(lblTotal.getText()).append("\n");
         sb.append("════════════════════════════════════\n");
-        sb.append("   ¡Gracias por su compra!          \n");
+        sb.append("      ¡Gracias por su compra!        \n");
         sb.append("════════════════════════════════════\n");
 
-        // Ventana del recibo
         JDialog recibo = new JDialog(this, "Recibo de Compra", true);
         recibo.setSize(440, 480);
         recibo.setLocationRelativeTo(this);
@@ -323,16 +333,14 @@ public class Ventana extends JFrame {
         areaRecibo.setEditable(false);
         areaRecibo.setBackground(new Color(255, 255, 240));
         areaRecibo.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
-
         recibo.add(new JScrollPane(areaRecibo), BorderLayout.CENTER);
 
-        // ✅ Botón Cerrar: cierra el recibo Y termina la ejecución
         JButton btnCerrar = new JButton("Cerrar");
         btnCerrar.setBackground(new Color(255, 182, 193));
         btnCerrar.setFont(new Font("SansSerif", Font.BOLD, 12));
         btnCerrar.addActionListener(e -> {
             recibo.dispose();
-            System.exit(0); // ✅ Termina la ejecución del programa
+            System.exit(0);
         });
 
         JPanel panelBtn = new JPanel(new FlowLayout(FlowLayout.CENTER));
@@ -340,13 +348,16 @@ public class Ventana extends JFrame {
         recibo.add(panelBtn, BorderLayout.SOUTH);
 
         recibo.setVisible(true);
-    }
+    } // ✅ fin de mostrarRecibo()
 
+    // ✅ Clase interna bien ubicada: dentro de Ventana, fuera de métodos
     private class ManejadorRaton implements MouseListener {
         private JLabel targetLabel;
 
-        @Override
-        public void mouseClicked(MouseEvent e) {}
+        @Override public void mouseClicked(MouseEvent e)  {}
+        @Override public void mouseReleased(MouseEvent e) {}
+        @Override public void mouseEntered(MouseEvent e)  {}
+        @Override public void mouseExited(MouseEvent e)   {}
 
         @Override
         public void mousePressed(MouseEvent e) {
@@ -357,10 +368,6 @@ public class Ventana extends JFrame {
                 targetLabel = null;
             }
         }
-
-        @Override public void mouseReleased(MouseEvent e) {}
-        @Override public void mouseEntered(MouseEvent e)  {}
-        @Override public void mouseExited(MouseEvent e)   {}
     }
 
     private JPanel crearTarjeta(ImageIcon icono, Zapato zapato,
@@ -391,7 +398,7 @@ public class Ventana extends JFrame {
     private void actualizarTotal(DefaultListModel<String> carrito, JLabel lblTotal) {
         double total = 0;
         for (int i = 0; i < carrito.size(); i++) {
-            String item = carrito.get(i);
+            String item      = carrito.get(i);
             String precioStr = item.substring(item.lastIndexOf("$") + 1);
             total += Double.parseDouble(precioStr);
         }
@@ -439,6 +446,7 @@ public class Ventana extends JFrame {
         }
     }
 
+    // ✅ Clase Zapato dentro de Ventana, justo antes del cierre final
     class Zapato {
         String marca, modelo;
         double precio;
@@ -460,4 +468,5 @@ public class Ventana extends JFrame {
             default:       return Color.LIGHT_GRAY;
         }
     }
-}
+
+} // ✅ cierre final de la clase Ventana
