@@ -64,6 +64,7 @@ public class Ventana extends JFrame {
         add(panelOpciones, BorderLayout.EAST);
 
         //Presionar Ctrl+q abre el catalogo
+        //
         listaZapatos.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
