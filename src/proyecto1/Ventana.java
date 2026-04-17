@@ -15,6 +15,7 @@ public class Ventana extends JFrame {
     private JRadioButton rbHombre;
     private JRadioButton rbMujer;
     private JPanel panelImagenes;
+    private JProgressBar barraTotal;
 
     private static final String RUTA_BASE = "C:\\Users\\joser\\OneDrive\\Escritorio\\Proyecto1";
 
@@ -79,11 +80,11 @@ public class Ventana extends JFrame {
         panelOpciones.setBackground(new Color(102, 153, 153));
         add(panelOpciones, BorderLayout.EAST);
 
-        // ── Teclado Q abre catálogo ──────────────────────────────
+        // ── Teclado Ctrl + q abre catálogo ──────────────────────────────
         listaZapatos.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_Q) {
+                if (e.getKeyCode() == KeyEvent.VK_Q && e.isControlDown()) {
                     abrirCatalogoSiSeleccionado();
                 }
             }
@@ -146,6 +147,24 @@ public class Ventana extends JFrame {
         DefaultListModel<String> carrito = new DefaultListModel<>();
         JList<String> listaCarrito = new JList<>(carrito);
         JLabel lblTotal = new JLabel("Total: $0.00");
+        barraTotal = new JProgressBar(0, 10000); // límite máximo
+        barraTotal.setStringPainted(true);
+        barraTotal.setValue(0);
+        
+              // ── Teclado Ctrl + w cierra catálogo ──────────────────────────────
+        // ── Teclado Ctrl + w elimina del carrito ──────────────────────────
+listaCarrito.addKeyListener(new KeyAdapter() {
+    @Override
+    public void keyPressed(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_W && e.isControlDown()) {
+            int index = listaCarrito.getSelectedIndex();
+            if (index != -1) {
+                carrito.remove(index);
+                actualizarTotal(carrito, lblTotal);
+            }
+        }
+    }
+});
 
         //Botón Eliminar del carrito con imagen borrar.png
         JButton btnEliminarCarrito;
@@ -170,8 +189,9 @@ public class Ventana extends JFrame {
         panelCarrito.add(new JScrollPane(listaCarrito), BorderLayout.CENTER);
 
         JPanel panelSurCarrito = new JPanel(new BorderLayout());
-        panelSurCarrito.add(lblTotal, BorderLayout.WEST);
-        panelSurCarrito.add(btnEliminarCarrito, BorderLayout.EAST);
+        panelSurCarrito.add(lblTotal, BorderLayout.NORTH);
+        panelSurCarrito.add(barraTotal, BorderLayout.CENTER);
+        panelSurCarrito.add(btnEliminarCarrito, BorderLayout.SOUTH);
         panelCarrito.add(panelSurCarrito, BorderLayout.SOUTH);
         catalogo.add(panelCarrito, BorderLayout.EAST);
 
@@ -223,6 +243,7 @@ public class Ventana extends JFrame {
                     "Compra inválida", JOptionPane.WARNING_MESSAGE);
                 return;
             }
+       
 
             StringBuilder resumen = new StringBuilder("Has comprado:\n");
             for (int i = 0; i < carrito.size(); i++) {
@@ -235,6 +256,8 @@ public class Ventana extends JFrame {
                 resumen.toString(), "Resumen de compra",
                 JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE,
                 null, opciones, opciones[0]);
+            
+     
 
             if (seleccion == 0) {
                 catalogo.dispose();
@@ -407,13 +430,20 @@ public class Ventana extends JFrame {
     }
 
     private void actualizarTotal(DefaultListModel<String> carrito, JLabel lblTotal) {
-        double total = 0;
-        for (int i = 0; i < carrito.size(); i++) {
-            String item = carrito.get(i);
-            String precioStr = item.substring(item.lastIndexOf("$") + 1);
-            total += Double.parseDouble(precioStr);
-        }
-        lblTotal.setText("Total: $" + String.format("%.2f", total));
+    double total = 0;
+    for (int i = 0; i < carrito.size(); i++) {
+        String item = carrito.get(i);
+        String precioStr = item.substring(item.lastIndexOf("$") + 1);
+        total += Double.parseDouble(precioStr);
+    }
+
+    lblTotal.setText("Total: $" + String.format("%.2f", total));
+
+    // Actualizar barra de progreso
+    if (barraTotal != null) {
+        barraTotal.setValue((int) total);
+    }
+    
     }
 
     private ImageIcon escalarImagen(String ruta) {
@@ -470,4 +500,6 @@ public class Ventana extends JFrame {
             default:       return Color.LIGHT_GRAY;
         }
     }
-}  
+}
+
+
